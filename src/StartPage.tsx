@@ -9,6 +9,10 @@ export function StartPage({ onChoose }: StartPageProps) {
     <div className="desk">
       <article className="phone start">
         <img className="start-logo" src={asset("logo.svg")} alt="smallcase" />
+        <p className="start-note">
+          <strong>Project Scope:</strong>
+          The following flows currently have only a portfolio page in scope.
+        </p>
         <div className="start-choices">
           <button type="button" className="start-choice" onClick={() => onChoose("new")}>
             New User Flow
@@ -19,10 +23,6 @@ export function StartPage({ onChoose }: StartPageProps) {
             <img src={asset("arrow-circle.svg")} alt="" />
           </button>
         </div>
-        <p className="start-note">
-          <strong>Please note:</strong>
-          The following flow includes only a portfolio page for the current scope.
-        </p>
       </article>
     </div>
   );

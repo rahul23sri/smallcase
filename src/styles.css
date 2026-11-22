@@ -100,7 +100,7 @@ img {
   flex-direction: column;
   gap: 24px;
   width: min(360px, calc(100% - 68px));
-  margin-top: 113px;
+  margin-top: 48px;
 }
 
 .start-choice {
@@ -124,8 +124,7 @@ img {
 
 .start-note {
   width: min(375px, calc(100% - 52px));
-  margin-top: auto;
-  padding: 48px 0 48px;
+  margin-top: 48px;
   color: #62758e;
   font-size: 16px;
   font-weight: 400;
@@ -1200,10 +1199,27 @@ img {
 }
 
 .subscribe-card {
+  position: relative;
   width: min(351px, 100%);
   border-radius: 12px;
   background: #fff;
+}
+
+.subscribe-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
   outline: none;
+}
+
+.subscribe-close:hover {
+  color: var(--ink);
 }
 
 .stay {

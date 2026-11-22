@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { EXPERT_STORIES, ExpertStories } from "./ExpertStories";
 import { Explainer } from "./Explainer";
@@ -77,6 +77,24 @@ export function PortfolioPage({ flow, onBack }: PortfolioPageProps) {
   const storiesWatchedRef = useRef(false);
   const seenStoriesRef = useRef(new Set<number>());
   storiesWatchedRef.current = storiesWatched;
+
+  const skipTabScroll = useRef(true);
+
+  useLayoutEffect(() => {
+    if (skipTabScroll.current) {
+      skipTabScroll.current = false;
+      return;
+    }
+    const phone = phoneRef.current;
+    if (!phone) return;
+    const appBar = phone.querySelector(".app-bar");
+    const tabs = phone.querySelector(".tabs");
+    const active = phone.querySelector(".tab-pane:not(.is-inactive)");
+    if (!appBar || !tabs || !(active instanceof HTMLElement)) return;
+    const targetTop = appBar.getBoundingClientRect().bottom + tabs.getBoundingClientRect().height;
+    const delta = active.getBoundingClientRect().top - targetTop;
+    if (Math.abs(delta) > 1) phone.scrollTop += delta;
+  }, [tab]);
 
   function markStoryWatched(storyIndex: number) {
     seenStoriesRef.current.add(storyIndex);
@@ -543,7 +561,7 @@ function phoneFrame() {
 }
 
 function SubscribePopup({ onClose }: { onClose: () => void }) {
-  const cardRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   const [frame, setFrame] = useState(phoneFrame);
 
   useEffect(() => {
@@ -552,7 +570,7 @@ function SubscribePopup({ onClose }: { onClose: () => void }) {
     const sync = () => setFrame(phoneFrame());
     sync();
     if (phone) phone.style.overflow = "hidden";
-    cardRef.current?.focus();
+    closeRef.current?.focus();
     window.addEventListener("resize", sync);
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -568,13 +586,28 @@ function SubscribePopup({ onClose }: { onClose: () => void }) {
   return createPortal(
     <div className="subscribe-popup" style={frame} onClick={onClose}>
       <div
-        ref={cardRef}
         className="subscribe-card"
         role="dialog"
         aria-modal="true"
         aria-label="Subscribe pop up"
-        tabIndex={-1}
       >
+        <button
+          ref={closeRef}
+          type="button"
+          className="subscribe-close"
+          aria-label="Close"
+          onClick={onClose}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+            <path
+              d="M1.5 1.5 L12.5 12.5 M12.5 1.5 L1.5 12.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
         <StayTuned />
       </div>
     </div>,
