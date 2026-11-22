@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { EXPERT_STORIES, ExpertStories } from "./ExpertStories";
 import { Explainer } from "./Explainer";
@@ -258,10 +258,23 @@ export function PortfolioPage({ flow, onBack }: PortfolioPageProps) {
           aria-labelledby={`tab-${tab}`}
           className="panel"
         >
-          {tab === "Getting Started" ? <GettingStarted /> : <QuietTab name={tab} />}
+          <div
+            className={`tab-pane${tab === "Getting Started" ? "" : " is-inactive"}`}
+            aria-hidden={tab !== "Getting Started"}
+            inert={tab !== "Getting Started"}
+          >
+            <GettingStarted />
+            <Pricing />
+          </div>
+          <div
+            className={`tab-pane${tab === "Getting Started" ? " is-inactive" : ""}`}
+            aria-hidden={tab === "Getting Started"}
+            inert={tab === "Getting Started"}
+          >
+            <StayTuned />
+          </div>
         </div>
 
-        <Pricing />
         <Footer />
       </article>
       {storiesOpen ? (
@@ -433,6 +446,9 @@ function ExpertCard({ onOpenStories }: { onOpenStories: () => void }) {
 }
 
 function GettingStarted() {
+  const [subscribeOpen, setSubscribeOpen] = useState(false);
+  const closeSubscribe = useCallback(() => setSubscribeOpen(false), []);
+
   return (
     <>
       <section className="started">
@@ -505,14 +521,64 @@ function GettingStarted() {
             Try a sample buy and rebalance with virtual money. Learn what happens before
             using your own.
           </p>
-          <button type="button">
+          <button type="button" onClick={() => setSubscribeOpen(true)}>
             Try a practice portfolio
             <img src={asset("arrow.svg")} alt="" />
           </button>
           <p className="practice-note">No broker connection. No real money. No fee.</p>
         </div>
       </section>
+      {subscribeOpen ? <SubscribePopup onClose={closeSubscribe} /> : null}
     </>
+  );
+}
+
+function phoneFrame() {
+  const phone = document.querySelector(".phone");
+  if (!phone) {
+    return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight };
+  }
+  const rect = phone.getBoundingClientRect();
+  return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+}
+
+function SubscribePopup({ onClose }: { onClose: () => void }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [frame, setFrame] = useState(phoneFrame);
+
+  useEffect(() => {
+    const phone = document.querySelector<HTMLElement>(".phone");
+    const previousOverflow = phone?.style.overflow ?? "";
+    const sync = () => setFrame(phoneFrame());
+    sync();
+    if (phone) phone.style.overflow = "hidden";
+    cardRef.current?.focus();
+    window.addEventListener("resize", sync);
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      if (phone) phone.style.overflow = previousOverflow;
+      window.removeEventListener("resize", sync);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div className="subscribe-popup" style={frame} onClick={onClose}>
+      <div
+        ref={cardRef}
+        className="subscribe-card"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Subscribe pop up"
+        tabIndex={-1}
+      >
+        <StayTuned />
+      </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -572,11 +638,21 @@ function Footer() {
   );
 }
 
-function QuietTab({ name }: { name: Tab }) {
+function StayTuned() {
   return (
-    <section className="quiet">
-      <h2>{name}</h2>
-      <p>Finish the introduction above, then this section is yours to read at your pace.</p>
+    <section className="stay" aria-label="Stay tuned">
+      <p className="stay-title">Stay tuned...</p>
+      <div className="stay-card">
+        <span className="stay-lock" aria-hidden="true">
+          🔐
+        </span>
+        <div>
+          <p>Unlock Full Solution</p>
+          <p>
+            Subscribe for <strong>Head of Design</strong> for a complete solution :)
+          </p>
+        </div>
+      </div>
     </section>
   );
 }
